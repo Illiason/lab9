@@ -1,0 +1,145 @@
+   54  d
+   55  cd ..
+   56  ls
+   57  cd *9
+   58  ls
+   59  git init
+   60  gh auth login 
+   61  gh auth status
+   62  ssh -i ~/.ssh/deploy_illia -T git@github.com
+   63  gh config set git_protocol https
+   64  gh auth setup-git
+   65  gh config get git_protocol   # https
+   66  git config --global --get credential.https://github.com.helper   # !/usr/bin/gh or similar
+   67  gh repo create lab9 --public --source=. --remote=origin
+   68  ls
+   69  gh label create EPIC --color "6f42c1" --description "Epic issue"
+   70  gh issue create --title "do lab9" --label EPIC
+   71  gh issue create --title "create validate-data script" --label enhancement --assignee "@me"
+   72  set -euo pipefail
+   73  cat > validate-data.sh <<'EOF'
+   74  #!/usr/bin/env bash
+   75  set -euo pipefail
+   76  if [[ $# -ne 2 ]]; then
+   77    echo "Usage: $0 <name> <mobile>"
+   78    exit 2
+   79  fi
+   80  name="$1"
+   81  mobile="$2"
+   82  if [[ ${#name} -le 15 && ${#mobile} -le 10 ]]; then
+   83    echo "PASS"
+   84  else
+   85    echo "FAIL"
+   86  fi
+   87  EOF
+   88  chmod +x validate-data.sh
+   89  ls
+   90  nano val*
+   91  ./validate-data.sh "pearse mccarthy" "0831122334"
+   92  ./validate-data.sh "John Doe" "12345678901" 
+   93  ./validate-data.sh "abcdefghijklmnop" "0831122334"
+   94  nano validate-data.sh
+   95  ./validate-data.sh "pearse mccarthy" "0831122334"
+   96  ./validate-data.sh "abcdefghijklmnop" "0831122334"
+   97  ./validate-data.sh "John Doe" "12345678901" 
+   98  mkdir -p .github/workflows
+   99  cat > .github/workflows/basictests.yml <<'EOF'
+  100  name: lab9-basic-tests
+  101  on:
+  102    push:
+  103      branches: [ main, test ]
+  104    workflow_dispatch:
+  105  jobs:
+  106    lab9-basic-tests:
+  107      runs-on: ubuntu-latest
+  108      steps:
+  109        - name: Check out repository
+  110          uses: actions/checkout@v4
+  111        - name: Make script executable
+  112          run: chmod +x validate-data.sh
+  113        - name: Run and verify output
+  114          shell: bash
+  115          run: |
+  116            set -euo pipefail
+  117            check() {
+  118              local expected="$1"; shift
+  119              local out
+  120              out="$(bash validate-data.sh "$@")"
+  121              echo "Script output was: $out"
+  122              if [[ "$out" == "$expected" ]]; then
+  123                echo "Test Passed!"
+  124              else
+  125                echo "Test Failed! Expected: $expected"
+  126                exit 1
+  127              fi
+  128            }
+  129            check PASS "pearse mccarthy" "0831122334"
+  130            check FAIL "John Doe" "12345678901"
+  131            check FAIL "abcdefghijklmnop" "0831122334"
+  132  EOF
+  133  git add .
+  134  git commit -m "Task 4 of the lab"
+  135  git push
+  136  d
+  137  cd ..
+  138  cd *9
+  139  ls
+  140  history
+  141  git push
+  142  git add .
+  143  git commit -m "Task 4 of the lab"
+  144  git push
+  145  git checkout -b main 
+  146  git status
+  147  git add .
+  148  git commit -m "Task 4 of the lab"
+  149  git push
+  150  git push --set-upstream origin main
+  151  cd ~/devops/week9/lab9
+  152  git remote -v
+  153  cat ~/.ssh/config 2>/dev/null
+  154  ls -l ~/.ssh/
+  155  ssh -T git@github.com
+  156  ssh -vT git@github.com 2>&1 | grep -Ei "Offering|Server accepts|Authenticated|publickey|identity file"
+  157  gh ssh-key list
+  158  ssh -vT git@github.com 2>&1 | grep -Ei "Offering|Server accepts|Authenticated|publickey|identity file"
+  159  debug1: identity file /home/illialysennyi/.ssh/id_ed25519 type 3
+  160  debug1: identity file /home/illialysennyi/.ssh/id_ed25519-cert type -1
+  161  debug1: kex_ext_info_check_ver: publickey-hostbound@openssh.com=<0>
+  162  debug1: Authentications that can continue: publickey
+  163  debug1: Next authentication method: publickey
+  164  debug1: Offering public key: /home/illialysennyi/.ssh/id_ed25519 ED25519 SHA256:…. explicit
+  165  debug1: Authentications that can continue: publickey
+  166  git@github.com: Permission denied (publickey).
+  167  ssh-keygen -lf ~/.ssh/id_ed25519.pub
+  168  gh ssh-key list
+  169  gh ssh-key add ~/.ssh/id_ed25519.pub --title "Cloud Shell id_ed25519"
+  170  ssh -T git@github.com
+  171  git push --set-upstream origin main
+  172  gh issue create --title "create lab9 project view" --label enhancement --assignee "@me"
+  173  gh project create --owner "@me" --title "lab9"
+  174  gh project list --owner "@me"
+  175  gh project item-add LABEL --owner "@me" --url https://github.com/Illiason/lab9/issues/<n1>
+  176  gh project item-list 3 --owner "@me"
+  177  gh issue list --state all --json number,title,url --jq '.[] | "\(.number)\t\(.title)\t\(.url)"'
+  178  gh issue create   --title "create yaml test script"   --label enhancement   --assignee "@me"
+  179  gh issue list --state all --json number,title,url --jq '.[] | "\(.number)\t\(.title)\t\(.url)"'
+  180  gh issue list --state all --json number,title,labels,assignees   --jq '.[] | "#\(.number) \(.title) | labels: \([.labels[].name]|join(",")) | assignee: \([.assignees[].login]|join(","))"'
+  181  for u in $(gh issue list --state all --json url --jq '.[].url'); do   gh project item-add 3 --owner "@me" --url "$u"; done
+  182  gh project item-list 3 --owner "@me"
+  183  gh issue close 1 2
+  184  gh issue create --title "create test branch and run workflow on test" --label enhancement --assignee "@me"
+  185  git checkout -b test
+  186  sed -i 's/-le 15/-le 20/' validate-data.sh
+  187  sed -i 's/check FAIL "abcdefghijklmnop"/check PASS "abcdefghijklmnop"/' .github/workflows/basictests.yml
+  188  git add .
+  189  git commit -m "Change name length to 20 and expect PASS"
+  190  git push -u origin test
+  191  gh run list --branch test --limit 1
+  192  history
+  193  history tail -150
+  194  history tail 150
+  195  tail - n history
+  196  history 150 
+  197  history 145 
+  198  history 145 > history.txt

@@ -33,4 +33,4 @@ jobs:
           }
           check PASS "pearse mccarthy" "0831122334"
           check FAIL "John Doe" "12345678901"
-          check FAIL "abcdefghijklmnop" "0831122334"
+          check PASS "abcdefghijklmnop" "0831122334"

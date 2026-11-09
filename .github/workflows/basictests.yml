@@ -1,0 +1,36 @@
+name: lab9-basic-tests
+
+on:
+  push:
+    branches: [ main, test ]
+  workflow_dispatch:
+
+jobs:
+  lab9-basic-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x validate-data.sh
+
+      - name: Run and verify output
+        shell: bash
+        run: |
+          set -euo pipefail
+          check() {
+            local expected="$1"; shift
+            local out
+            out="$(bash validate-data.sh "$@")"
+            echo "Script output was: $out"
+            if [[ "$out" == "$expected" ]]; then
+              echo "Test Passed!"
+            else
+              echo "Test Failed! Expected: $expected"
+              exit 1
+            fi
+          }
+          check PASS "pearse mccarthy" "0831122334"
+          check FAIL "John Doe" "12345678901"
+          check FAIL "abcdefghijklmnop" "0831122334"
